@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our Voxel Room 💕</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<!-- ✅ Paste YOUR Firebase config here -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, remove, onDisconnect }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyA8TNI9mzkL3qyF0fKVwV1iqM_D0SQWmmQ",
+  authDomain: "cheryl-s-birthday-p0.firebaseapp.com",
+  databaseURL: "https://cheryl-s-birthday-p0-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cheryl-s-birthday-p0",
+  storageBucket: "cheryl-s-birthday-p0.firebasestorage.app",
+  messagingSenderId: "830805824685",
+  appId: "1:830805824685:web:aeeedd0d9b72bb4bf8a224",
+  measurementId: "G-53MRDFPNYH"
+};
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+window.__db=db;window.__ref=ref;window.__set=set;window.__onValue=onValue;
+window.__remove=remove;window.__onDisconnect=onDisconnect;
+window.__fbReady=true;window.dispatchEvent(new Event('fbReady'));
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#060010;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;overflow:hidden;font-family:'Press Start 2P',monospace;user-select:none;}
+#wrap{position:relative;width:800px;height:508px;}
+
+canvas{display:block;width:800px!important;height:448px!important;
+  image-rendering:pixelated;image-rendering:crisp-edges;
+  border:2px solid #ff6b9d;border-bottom:none;
+  box-shadow:0 0 50px #ff6b9d44,0 0 100px #ff6b9d18;cursor:grab;}
+canvas:active{cursor:grabbing;}
+canvas.dmode{cursor:crosshair;}
+
+/* ── Bottom bar ── */
+#bar{position:absolute;bottom:0;left:0;right:0;height:60px;
+  background:rgba(5,0,16,.97);border:2px solid #ff6b9d;border-top:none;
+  display:flex;align-items:center;}
+.bb{flex:1;height:100%;border:none;background:transparent;color:#ffffff33;
+  font-family:'Press Start 2P',monospace;font-size:6px;cursor:pointer;
+  border-right:1px solid #ffffff0d;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;transition:background .1s;}
+.bb:hover{background:rgba(255,107,157,.1);}
+.bb.on{color:#ff6b9d;background:rgba(255,107,157,.18);}
+#hcnt{padding:0 12px;text-align:center;color:#ff4488;font-size:8px;
+  line-height:2.2;white-space:nowrap;}
+
+/* ── Decorate panel ── */
+#dp{display:none;position:absolute;top:0;left:0;width:188px;height:448px;
+  background:rgba(5,0,16,.97);border-right:2px solid #ff6b9d;
+  flex-direction:column;z-index:50;overflow-y:auto;}
+.dptop{text-align:center;color:#ff6b9d;font-size:6px;padding:10px 8px 6px;
+  border-bottom:1px solid #ff6b9d33;line-height:2;}
+.fi{display:flex;align-items:center;gap:8px;padding:7px 8px;cursor:pointer;
+  border-bottom:1px solid #ffffff07;transition:background .12s;}
+.fi:hover{background:rgba(255,107,157,.1);}
+.fi.sel{background:rgba(255,107,157,.22);border-left:3px solid #ff6b9d;}
+.fi.lk{opacity:.35;cursor:not-allowed;}
+.fic{width:34px;height:34px;background:#0a0020;border:1px solid #ffffff0d;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.fin{flex:1;}.fnm{font-size:5px;color:#ffeedd;margin-bottom:4px;}
+.fcs{font-size:5px;color:#ff4488;}.fcs.fr{color:#44ff88;}
+
+/* ── Note dialogs ── */
+#nwOv,#nrOv{display:none;position:absolute;inset:0;background:rgba(0,0,0,.82);
+  z-index:300;align-items:center;justify-content:center;}
+#nwOv.show,#nrOv.show{display:flex;}
+.nb{background:#0e0126;border:2px solid #ff6b9d;padding:24px;width:380px;}
+.nb h3{color:#ff6b9d;font-size:8px;margin-bottom:14px;}
+.nb textarea{width:100%;height:100px;background:#090015;color:#ffeedd;
+  border:1px solid #ff6b9d33;padding:9px;font-family:'Press Start 2P',monospace;
+  font-size:7px;resize:none;outline:none;line-height:1.9;}
+.nbb{margin-top:10px;display:flex;gap:8px;}
+.nbb button{flex:1;padding:9px;font-family:'Press Start 2P',monospace;
+  font-size:6px;border:none;cursor:pointer;}
+#bSv{background:#ff6b9d;color:#fff;}
+#bCn,#bCl{background:#1a0730;color:#ff6b9daa;border:1px solid #ff6b9d22!important;}
+#rTxt{color:#ffeedd;font-size:7px;line-height:2;white-space:pre-wrap;}
+#rAuth{color:#ff6b9d66;font-size:6px;margin-top:10px;}
+
+/* ── Status ── */
+#stat{position:absolute;top:10px;right:12px;font-size:7px;color:#ff6b9d;
+  background:rgba(5,0,16,.9);border:1px solid #ff6b9d33;
+  padding:6px 10px;line-height:2.1;text-align:right;z-index:10;}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:#282828;margin-right:4px;}
+.dot.on{background:#44ff88;box-shadow:0 0 5px #44ff88;}
+
+/* ── Hint ── */
+#hint{position:absolute;bottom:68px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.8);font-size:6px;padding:6px 12px;
+  display:none;white-space:nowrap;z-index:20;
+  border:1px solid #ffffaa55;color:#ffffaa;}
+
+/* ── Title ── */
+#ttl{position:absolute;inset:0;z-index:400;
+  background:rgba(4,0,12,.97);display:flex;align-items:center;justify-content:center;}
+.tp{background:rgba(5,0,15,.98);border:2px solid #ff6b9d;padding:30px 36px;
+  width:490px;text-align:center;box-shadow:0 0 50px #ff6b9d33;}
+.tp h1{color:#ff6b9d;font-size:17px;margin-bottom:8px;text-shadow:0 0 20px #ff6b9d88;}
+.tp p{color:#ffaacc;font-size:6px;margin-bottom:18px;}
+.tp label{color:#ffffff55;font-size:6px;display:block;margin-bottom:7px;}
+.tp input{width:100%;background:#08000f;color:#ffeedd;
+  border:1px solid #ff6b9d55;padding:10px;outline:none;text-align:center;
+  font-family:'Press Start 2P',monospace;font-size:11px;margin-bottom:14px;}
+.th{color:#aaffaa77;font-size:5px;line-height:2.2;margin-bottom:14px;}
+.tgo{background:#ff6b9d;color:#fff;border:none;width:100%;padding:11px;
+  font-family:'Press Start 2P',monospace;font-size:8px;cursor:pointer;}
+.tgo:hover{background:#ff88b5;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+
+  <div id="stat">
+    <span class="dot" id="d1"></span>YOU<br>
+    <span class="dot" id="d2"></span>HER<br>
+    <span id="stxt">–</span>
+  </div>
+
+  <div id="bar">
+    <button class="bb on" id="bEx">🚶<br>EXPLORE</button>
+    <button class="bb"    id="bDc">🧱<br>DECORATE</button>
+    <button class="bb"    id="bNt">✉<br>NOTE</button>
+    <div id="hcnt">♥ 0/5<br><span style="font-size:5px;color:#ffffff33">collect to unlock</span></div>
+  </div>
+
+  <div id="dp">
+    <div class="dptop">🧱 FURNITURE<br>
+      <span style="color:#ffffff33">Select → click floor to place<br>No selection → click to remove</span>
+    </div>
+    <div id="flist"></div>
+  </div>
+
+  <div id="nwOv">
+    <div class="nb">
+      <h3>✉ Leave a Love Note</h3>
+      <textarea id="nta" placeholder="Write something sweet for her…"></textarea>
+      <div class="nbb"><button id="bSv">Place Note ♥</button><button id="bCn">Cancel</button></div>
+    </div>
+  </div>
+
+  <div id="nrOv">
+    <div class="nb" style="border-color:#ffcc44;">
+      <h3 style="color:#ffcc44;">✉ Love Note</h3>
+      <div id="rTxt"></div><div id="rAuth"></div>
+      <div class="nbb"><button id="bCl">Close ♥</button></div>
+    </div>
+  </div>
+
+  <div id="hint"></div>
+
+  <div id="ttl">
+    <div class="tp">
+      <h1>OUR VOXEL ROOM 🏠</h1>
+      <p>A blocky world just for us ✦</p>
+      <label>Type her name:</label>
+      <input id="tname" maxlength="12" placeholder="My Love" autocomplete="off">
+      <div class="th">
+        1st to open = YOU (P1) · Send her the link → she is HER (P2)<br>
+        Drag mouse to rotate camera · WASD / Arrows to move<br>
+        Collect ♥ hearts to unlock new furniture!
+      </div>
+      <button class="tgo" id="tgo">ENTER OUR ROOM ♥</button>
+      <button class="tgo" id="treset" style="margin-top:8px;background:#331155;font-size:6px;padding:8px;">🔄 Reset Room (if stuck)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+//  OUR VOXEL ROOM — 3D Multiplayer with Three.js r128 💕
+// ================================================================
+
+// ── Renderer (half-res for voxel pixel aesthetic) ─────────────────
+const canvas = document.getElementById('c');
+const RW = 400, RH = 224; // internal res → displayed at 2x = 800×448
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(58, RW / RH, 0.1, 80);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+renderer.setSize(RW, RH);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.BasicShadowMap;
+
+// ── Lighting ─────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffe4ee, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+sun.position.set(5, 12, 4); sun.castShadow = true;
+sun.shadow.mapSize.set(512, 512); scene.add(sun);
+scene.add(Object.assign(new THREE.DirectionalLight(0x8844cc, 0.25),
+  { position: new THREE.Vector3(-5, 3, -5) }));
+const warmPt = new THREE.PointLight(0xff9966, 1.3, 14);
+warmPt.position.set(0, 2.8, 0); scene.add(warmPt);
+scene.fog = new THREE.FogExp2(0x120020, 0.04);
+
+// ── Room dimensions ───────────────────────────────────────────────
+const RX = 16, RZ = 10, WH = 3.2;
+const HX = RX / 2, HZ = RZ / 2;
+
+// ── Material helper ───────────────────────────────────────────────
+const mat = (color, em = 0, emI = 0) => new THREE.MeshLambertMaterial(
+  { color, flatShading: true, emissive: em, emissiveIntensity: emI });
+
+// ================================================================
+// BUILD ROOM
+// ================================================================
+let floorPlane;
+function buildRoom() {
+  const fA = mat(0xd4aa6a), fB = mat(0xc89a52);
+  for (let z = 0; z < RZ; z++)
+    for (let x = 0; x < RX; x++) {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(1, 0.14, 1), (x+z)%2===0?fA:fB);
+      t.position.set(x-HX+.5, -.07, z-HZ+.5);
+      t.receiveShadow = true; scene.add(t);
+    }
+
+  floorPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(RX, RZ),
+    new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide }));
+  floorPlane.rotation.x = -Math.PI/2;
+  floorPlane.position.y = 0.01;
+  floorPlane.name = 'floor';
+  scene.add(floorPlane);
+
+  const wm = mat(0x8a58a8), wm2 = mat(0x6a3888);
+  const bwall = new THREE.Mesh(new THREE.BoxGeometry(RX+.4, WH, .4), wm);
+  bwall.position.set(0, WH/2, -HZ-.2); bwall.castShadow=true; scene.add(bwall);
+  const lwall = new THREE.Mesh(new THREE.BoxGeometry(.4, WH, RZ+.4), wm2);
+  lwall.position.set(-HX-.2, WH/2, 0); scene.add(lwall);
+  const rwall = new THREE.Mesh(new THREE.BoxGeometry(.4, WH, RZ+.4), wm2);
+  rwall.position.set(HX+.2, WH/2, 0); scene.add(rwall);
+
+  const tr = mat(0x4a1e65);
+  [[RX+.4,.2,.15,0,WH/10,-HZ],[.15,.2,RZ,-HX,WH/10,0],[.15,.2,RZ,HX,WH/10,0]].forEach(([w,h,d,x,y,z])=>{
+    const m2=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),tr);
+    m2.position.set(x,y,z); scene.add(m2);
+  });
+  // Ceiling
+  const ceil = new THREE.Mesh(new THREE.BoxGeometry(RX+.4,.14,RZ+.4), mat(0x2e0e48));
+  ceil.position.set(0,WH,0); scene.add(ceil);
+  // Ceiling lamp
+  const lstem = new THREE.Mesh(new THREE.BoxGeometry(.06,.3,.06), mat(0xaaaaaa));
+  lstem.position.set(0,WH-.15,0); scene.add(lstem);
+  const lshade = new THREE.Mesh(new THREE.BoxGeometry(.7,.25,.7), mat(0xffeeaa));
+  lshade.position.set(0,WH-.4,0); scene.add(lshade);
+  const lglow = new THREE.Mesh(new THREE.BoxGeometry(.5,.08,.5), mat(0xffee88,0xffdd44,.9));
+  lglow.position.set(0,WH-.52,0); scene.add(lglow);
+  // Wall dots / pattern
+  const dm = mat(0xaa77cc);
+  for (let i=-6;i<=6;i+=2.5) for(let j=0;j<2;j++) {
+    const d2=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.04),dm);
+    d2.position.set(i,.9+j*1.15,-HZ+.03); scene.add(d2);
+  }
+  // Skirting picture rail
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(RX+.4,.08,.06),mat(0x7755aa));
+  rail.position.set(0,WH-.15,-HZ+.01); scene.add(rail);
+}
+
+// ================================================================
+// FURNITURE DEFINITIONS
+// ================================================================
+const FDEFS = [
+  { id:'rug',       name:'Big Rug',       emoji:'🟣', w:4, d:3, cost:0 },
+  { id:'sofa',      name:'Sofa',          emoji:'🛋',  w:3, d:1, cost:0 },
+  { id:'table',     name:'Coffee Table',  emoji:'🪵', w:2, d:1, cost:0 },
+  { id:'plant',     name:'Plant',         emoji:'🌿', w:1, d:1, cost:0 },
+  { id:'lamp',      name:'Floor Lamp',    emoji:'💡', w:1, d:1, cost:1 },
+  { id:'vase',      name:'Flower Vase',   emoji:'🌸', w:1, d:1, cost:2 },
+  { id:'tv',        name:'TV & Stand',    emoji:'📺', w:3, d:1, cost:2 },
+  { id:'bookshelf', name:'Bookshelf',     emoji:'📚', w:1, d:1, cost:3 },
+  { id:'armchair',  name:'Armchair',      emoji:'🪑', w:2, d:1, cost:4 },
+  { id:'frame',     name:'Love Frame',    emoji:'🖼',  w:1, d:1, cost:5 },
+];
+const fdef = id => FDEFS.find(d => d.id === id);
+
+// ── 3D voxel furniture builders ──────────────────────────────────
+function buildMesh(defId) {
+  const g = new THREE.Group();
+  const m2 = c => mat(c);
+
+  switch(defId){
+    case 'rug':{
+      g.add(mk(3.8,.05,2.8,m2(0xb85e8e),0,.025,0));
+      g.add(mk(3.0,.06,2.0,m2(0xd880b0),0,.031,0));
+      g.add(mk(.8,.07,.8,m2(0xff99cc),0,.038,0));
+      g.add(mk(.3,.07,.3,m2(0xffbbdd),-1.3,.038,-1.0));
+      g.add(mk(.3,.07,.3,m2(0xffbbdd), 1.3,.038,-1.0));
+      break;}
+    case 'sofa':{
+      g.add(mk(2.8,.4,.9,m2(0xe09070),0,.2,0));
+      g.add(mk(2.8,.7,.25,m2(0xc47060),0,.75,-.33));
+      g.add(mk(.25,.6,.9,m2(0xa05040),-1.4,.5,0));
+      g.add(mk(.25,.6,.9,m2(0xa05040), 1.4,.5,0));
+      g.add(mk(.85,.18,.7,m2(0xf0b898),-0.9,.5,.06));
+      g.add(mk(.85,.18,.7,m2(0xf0b898),   0,.5,.06));
+      g.add(mk(.85,.18,.7,m2(0xf0b898), 0.9,.5,.06));
+      [[-1.3,-.35],[1.3,-.35],[-1.3,.35],[1.3,.35]].forEach(([lx,lz])=>
+        g.add(mk(.1,.15,.1,m2(0x3a2010),lx,.075,lz)));
+      break;}
+    case 'table':{
+      g.add(mk(1.8,.12,.9,m2(0xc49422),0,.56,0));
+      [[-0.8,-.37],[0.8,-.37],[-0.8,.37],[0.8,.37]].forEach(([lx,lz])=>
+        g.add(mk(.1,.46,.1,m2(0x806010),lx,.23,lz)));
+      break;}
+    case 'plant':{
+      g.add(mk(.55,.5,.55,m2(0xbb5525),0,.25,0));
+      g.add(mk(.4,.08,.4,m2(0x3a1f0d),0,.54,0));
+      [[0,.9,0,.6],[0,1.2,0,.45],[-.18,1.05,0,.3],[.18,1.05,0,.3],[0,.78,.2,.26],[0,.78,-.2,.26]].forEach(([fx,fy,fz,fs])=>
+        g.add(mk(fs,fs,fs,m2(Math.random()>.5?0x2a7a45:0x3aaa60),fx,fy,fz)));
+      break;}
+    case 'lamp':{
+      g.add(mk(.07,1.6,.07,m2(0xc8a028),0,.8,0));
+      g.add(mk(.36,.08,.36,m2(0x907018),0,.04,0));
+      g.add(mk(.62,.3,.62,m2(0xf0cc6a),0,1.65,0));
+      g.add(mk(.42,.12,.42,mat(0xffee88,0xffdd44,.9),0,1.55,0));
+      break;}
+    case 'vase':{
+      g.add(mk(.36,.6,.36,m2(0xd8709a),0,.3,0));
+      g.add(mk(.22,.2,.22,m2(0xf099bb),0,.7,0));
+      g.add(mk(.06,.38,.06,m2(0x4a9a28),0,1.0,0));
+      g.add(mk(.28,.14,.28,m2(0xee3388),0,1.28,0));
+      g.add(mk(.12,.1,.12,m2(0xffd700),0,1.34,0));
+      break;}
+    case 'tv':{
+      g.add(mk(1.2,.5,.4,m2(0x2a2a44),0,.25,0));
+      g.add(mk(.2,.3,.15,m2(0x1a1a33),0,.65,0));
+      g.add(mk(2.2,1.2,.12,m2(0x0f0f22),0,1.22,0));
+      g.add(mk(2.0,1.0,.05,mat(0x002299,0x000e44,.9),0,1.22,.07));
+      const hm2=mat(0xff2255,0x881122,.5);
+      g.add(mk(.3,.3,.05,hm2,-.15,1.27,.11));
+      g.add(mk(.3,.3,.05,hm2, .15,1.27,.11));
+      g.add(mk(.62,.4,.05,hm2,0,1.07,.11));
+      g.add(mk(.42,.24,.05,hm2,0,.88,.11));
+      break;}
+    case 'bookshelf':{
+      g.add(mk(.9,2.4,.38,m2(0x5a3020),0,1.2,0));
+      [.7,1.4,2.1].forEach(y=>g.add(mk(.9,.07,.38,m2(0x3a2010),0,y,0)));
+      [0xe84444,0x4488ee,0x44aa44,0xeeaa00,0xaa44ee,0xee6688,0x44dddd,0xff8844,0x88dd44]
+        .forEach((col,i)=>{
+          const b=new THREE.Mesh(new THREE.BoxGeometry(.12,.38+Math.random()*.12,.24),m2(col));
+          b.position.set(-.3+(i%3)*.3,.9+Math.floor(i/3)*.7,0); g.add(b);
+        });
+      break;}
+    case 'armchair':{
+      g.add(mk(1.4,.35,1.0,m2(0x6699cc),0,.35,0));
+      g.add(mk(1.4,.7,.25,m2(0x4a78aa),0,.87,-.38));
+      g.add(mk(.22,.5,1.0,m2(0x3a6898),-.61,.6,0));
+      g.add(mk(.22,.5,1.0,m2(0x3a6898), .61,.6,0));
+      g.add(mk(1.0,.15,.75,m2(0x88bbee),0,.56,.05));
+      break;}
+    case 'frame':{
+      g.add(mk(.9,1.1,.08,m2(0xcc8833),0,.55,0));
+      g.add(mk(.7,.9,.05,m2(0xcce8ff),0,.55,.05));
+      const hm3=mat(0xff4488,0x881133,.35);
+      g.add(mk(.18,.18,.04,hm3,-.1,.62,.09));
+      g.add(mk(.18,.18,.04,hm3, .1,.62,.09));
+      g.add(mk(.38,.28,.04,hm3,0,.46,.09));
+      g.add(mk(.2,.16,.04,hm3,0,.32,.09));
+      break;}
+  }
+  g.traverse(c=>{ if(c.isMesh){ c.castShadow=true; c.receiveShadow=true; } });
+  return g;
+}
+// Box helper
+function mk(w,h,d,mat2,x,y,z){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat2);
+  m.position.set(x,y,z); return m;
+}
+
+// ================================================================
+// CHARACTERS
+// ================================================================
+function makeChar(isP1){
+  const g=new THREE.Group();
+  const m2=c=>mat(c);
+  const sk=0xffc09a, bd=isP1?0x5588ff:0xff5577, pt=isP1?0x3344cc:0xcc3355;
+  const hr=isP1?0x1a0e00:0xcc1188, sh=0x1e1e2a;
+
+  const head=mk(.5,.5,.5,m2(sk),0,1.52,0); g.add(head);
+  g.add(mk(.52,.17,.52,m2(hr),0,1.72,0));
+  if(!isP1){
+    g.add(mk(.3,.14,.08,m2(0xffccee),.19,1.84,0));
+    g.add(mk(.12,.12,.08,m2(0xff99cc),.19,1.9,-.02));
+  }
+  g.add(mk(.46,.6,.28,m2(bd),0,.9,0));
+
+  const lArm=mk(.18,.5,.18,m2(bd),-.32,.9,0); g.add(lArm);
+  const rArm=mk(.18,.5,.18,m2(bd), .32,.9,0); g.add(rArm);
+  const lLeg=mk(.18,.48,.18,m2(pt),-.12,.34,0); g.add(lLeg);
+  const rLeg=mk(.18,.48,.18,m2(pt), .12,.34,0); g.add(rLeg);
+  g.add(mk(.2,.12,.24,m2(sh),-.12,.06,.03));
+  g.add(mk(.2,.12,.24,m2(sh), .12,.06,.03));
+
+  g.traverse(c=>{ if(c.isMesh) c.castShadow=true; });
+  return { g, lArm, rArm, lLeg, rLeg };
+}
+
+const ch1=makeChar(true),  ch2=makeChar(false);
+scene.add(ch1.g); scene.add(ch2.g);
+ch2.g.visible=false;
+
+function animWalk(ch, moving, t){
+  const s=moving?Math.sin(t*.0018)*.45:0;
+  ch.lArm.rotation.x=-s; ch.rArm.rotation.x=s;
+  ch.lLeg.rotation.x= s; ch.rLeg.rotation.x=-s;
+}
+
+// ================================================================
+// PLAYER STATE
+// ================================================================
+const player={x:0,z:0,ry:0,px:0,pz:0};
+const remote={x:4,z:0,ry:0,online:false,px:0,pz:0};
+
+// ================================================================
+// HEARTS
+// ================================================================
+const HSPAWNS=[{x:-5,z:-3},{x:5,z:-3},{x:0,z:2},{x:-5,z:3},{x:5,z:3}];
+let heartObjs=[], heartState=[false,false,false,false,false], collected=0;
+
+function buildHeartMesh(){
+  const g=new THREE.Group();
+  const hm=mat(0xff3388,0x991133,.5);
+  const s=.2;
+  g.add(mk(s*3,s*3,s*2,hm,-s*1.5,s*1.5,0));
+  g.add(mk(s*3,s*3,s*2,hm, s*1.5,s*1.5,0));
+  g.add(mk(s*6,s*3,s*2,hm,0,0,0));
+  g.add(mk(s*4,s*2,s*2,hm,0,-s*2.5,0));
+  g.add(mk(s*2,s*2,s*2,hm,0,-s*4,0));
+  g.add(mk(s*1,s*1.5,s*2,hm,0,-s*5.5,0));
+  return g;
+}
+
+function spawnHearts(){
+  heartObjs.forEach(h=>scene.remove(h.group));
+  heartObjs=[];
+  HSPAWNS.forEach((pos,i)=>{
+    const group=buildHeartMesh();
+    group.position.set(pos.x,.9,pos.z);
+    group.visible=!heartState[i];
+    scene.add(group);
+    heartObjs.push({group,...pos,idx:i,collected:heartState[i]});
+  });
+}
+
+function checkHearts(){
+  heartObjs.forEach(h=>{
+    if(h.collected) return;
+    const dx=player.x-h.x, dz=player.z-h.z;
+    if(dx*dx+dz*dz<.9){
+      h.collected=true; h.group.visible=false;
+      heartState[h.idx]=true; collected++;
+      updateHCount(); pubHearts(); buildFurnPanel();
+      showHint('♥ Heart collected!','#ff4488',2000);
+    }
+  });
+}
+
+function updateHCount(){
+  document.getElementById('hcnt').innerHTML=
+    `♥ ${collected}/5<br><span style="font-size:5px;color:#ffffff33">unlock furniture</span>`;
+}
+
+// ================================================================
+// NOTES (3D envelope objects)
+// ================================================================
+let noteObjs={};
+let pendingNote=null;
+
+function buildEnvelope(){
+  const g=new THREE.Group();
+  g.add(mk(.4,.28,.05,mat(0xffdd44,0x886600,.4),0,.14,0));
+  g.add(mk(.4,.15,.04,mat(0xffcc00,0,0),0,.32,-.01));
+  g.add(mk(.3,.02,.04,mat(0x996600,0,0),0,.14,.03));
+  return g;
+}
+
+function placeNote(nid,x,z,text,author){
+  if(noteObjs[nid]) return;
+  const group=buildEnvelope();
+  group.position.set(x,.15,z);
+  scene.add(group);
+  noteObjs[nid]={group,x,z,text,author};
+}
+
+function checkNotes(){
+  const hint=document.getElementById('hint');
+  let near=null;
+  for(const [nid,n] of Object.entries(noteObjs)){
+    const dx=player.x-n.x, dz=player.z-n.z;
+    if(dx*dx+dz*dz<1.1){near=[nid,n];break;}
+  }
+  if(near){
+    hint.textContent='[E] Read love note';
+    hint.style.display='block'; hint.style.color='#ffffaa';
+    pendingNote=near;
+  } else {
+    if(hint.textContent==='[E] Read love note') hint.style.display='none';
+    pendingNote=null;
+  }
+}
+
+function showHint(txt,col,ms){
+  const h=document.getElementById('hint');
+  h.textContent=txt; h.style.color=col; h.style.display='block';
+  setTimeout(()=>{if(h.textContent===txt) h.style.display='none';},ms);
+}
+
+// ================================================================
+// FURNITURE STATE
+// ================================================================
+let placed=[], uidCtr=200;
+const solid=new Set();
+
+const DEFAULT_FUR=[
+  {uid:'d1',defId:'rug',   gx:6,gz:3},
+  {uid:'d2',defId:'sofa',  gx:6,gz:1},
+  {uid:'d3',defId:'table', gx:7,gz:5},
+  {uid:'d4',defId:'plant', gx:1,gz:1},
+  {uid:'d5',defId:'plant', gx:13,gz:1},
+];
+
+function gToW(gx,gz){return {x:gx-HX+.5, z:gz-HZ+.5};}
+function wToG(wx,wz){return {gx:Math.floor(wx+HX), gz:Math.floor(wz+HZ)};}
+function isWall(gx,gz){return gx<=0||gx>=RX-1||gz<=0||gz>=RZ-1;}
+
+function rebuildSolid(){
+  solid.clear();
+  for(let gx=0;gx<RX;gx++) for(let gz=0;gz<RZ;gz++)
+    if(isWall(gx,gz)) solid.add(`${gx},${gz}`);
+  for(const f of placed){
+    const d=fdef(f.defId); if(!d) continue;
+    for(let dx=0;dx<d.w;dx++) for(let dz=0;dz<d.d;dz++)
+      solid.add(`${f.gx+dx},${f.gz+dz}`);
+  }
+}
+
+function tryPlace(defId,gx,gz){
+  const d=fdef(defId); if(!d||collected<d.cost) return false;
+  for(let dx=0;dx<d.w;dx++) for(let dz=0;dz<d.d;dz++){
+    if(isWall(gx+dx,gz+dz)||solid.has(`${gx+dx},${gz+dz}`)) return false;
+  }
+  const uid='u'+(++uidCtr);
+  const group=buildMesh(defId);
+  const p=gToW(gx,gz);
+  group.position.set(p.x+(d.w-1)*.5, 0, p.z+(d.d-1)*.5);
+  scene.add(group);
+  placed.push({uid,defId,gx,gz,group});
+  rebuildSolid(); pubFurniture(); return true;
+}
+
+function tryRemove(gx,gz){
+  for(let i=placed.length-1;i>=0;i--){
+    const f=placed[i]; const d=fdef(f.defId); if(!d) continue;
+    if(gx>=f.gx&&gx<f.gx+d.w&&gz>=f.gz&&gz<f.gz+d.d){
+      scene.remove(f.group); placed.splice(i,1);
+      rebuildSolid(); pubFurniture(); return;
+    }
+  }
+}
+
+function loadFurniture(arr){
+  placed.forEach(f=>scene.remove(f.group));
+  placed=[];
+  arr.forEach(f=>{
+    const d=fdef(f.defId); if(!d) return;
+    const group=buildMesh(f.defId);
+    const p=gToW(f.gx,f.gz);
+    group.position.set(p.x+(d.w-1)*.5,0,p.z+(d.d-1)*.5);
+    scene.add(group);
+    placed.push({...f,group});
+  });
+  rebuildSolid();
+}
+
+// ================================================================
+// CAMERA
+// ================================================================
+let camTh=Math.PI*.18, camPh=.72, camDist=7;
+let dragging=false, lmx=0, lmy=0, hasDragged=false;
+
+canvas.addEventListener('mousedown',e=>{dragging=true;hasDragged=false;lmx=e.clientX;lmy=e.clientY;});
+window.addEventListener('mouseup',  ()=>dragging=false);
+window.addEventListener('mousemove',e=>{
+  if(!dragging) return;
+  const dx=(e.clientX-lmx)*.009, dy=(e.clientY-lmy)*.008;
+  if(Math.abs(e.clientX-lmx)>3||Math.abs(e.clientY-lmy)>3) hasDragged=true;
+  camTh-=dx; camPh=Math.max(.22,Math.min(1.35,camPh-dy));
+  lmx=e.clientX; lmy=e.clientY;
+});
+// Scroll to zoom
+canvas.addEventListener('wheel',e=>{
+  camDist=Math.max(3,Math.min(12,camDist+e.deltaY*.005)); e.preventDefault();},{passive:false});
+
+function updateCam(){
+  const tx=player.x, tz=player.z, ty=.9;
+  camera.position.set(
+    tx+camDist*Math.sin(camTh)*Math.cos(camPh),
+    ty +camDist*Math.sin(camPh),
+    tz+camDist*Math.cos(camTh)*Math.cos(camPh));
+  camera.lookAt(tx,ty+.4,tz);
+}
+
+// ================================================================
+// MOVEMENT
+// ================================================================
+const keys={};
+const SPDHZ=.09;
+
+function movePlayer(){
+  if(gameMode!=='explore') return;
+  const L=keys.KeyA||keys.ArrowLeft, R=keys.KeyD||keys.ArrowRight;
+  const U=keys.KeyW||keys.ArrowUp,   D=keys.KeyS||keys.ArrowDown;
+  let dx=0,dz=0;
+  const fwd=new THREE.Vector3(-Math.sin(camTh),0,-Math.cos(camTh));
+  const rt =new THREE.Vector3( Math.cos(camTh),0,-Math.sin(camTh));
+  if(U){dx+=fwd.x;dz+=fwd.z;} if(D){dx-=fwd.x;dz-=fwd.z;}
+  if(L){dx-=rt.x; dz-=rt.z;}  if(R){dx+=rt.x; dz+=rt.z;}
+  if(dx||dz){
+    const ln=Math.sqrt(dx*dx+dz*dz);
+    dx=dx/ln*SPDHZ; dz=dz/ln*SPDHZ;
+    const nx=player.x+dx, nz=player.z+dz;
+    if(!blocked(nx,player.z)) player.x=nx;
+    if(!blocked(player.x,nz)) player.z=nz;
+    player.x=Math.max(-HX+.6,Math.min(HX-.6,player.x));
+    player.z=Math.max(-HZ+.6,Math.min(HZ-.6,player.z));
+    player.ry=Math.atan2(dx,dz);
+  }
+  const moving=!!(dx||dz);
+  ch1.g.position.set(player.x,0,player.z);
+  ch1.g.rotation.y=player.ry;
+  animWalk(ch1,moving,Date.now());
+}
+
+function blocked(wx,wz){
+  const mg=.36;
+  return [{x:wx-mg,z:wz-mg},{x:wx+mg,z:wz-mg},{x:wx-mg,z:wz+mg},{x:wx+mg,z:wz+mg}]
+    .some(c=>{ const g=wToG(c.x,c.z); return solid.has(`${g.gx},${g.gz}`); });
+}
+
+// ================================================================
+// DECORATE MODE — Raycasting
+// ================================================================
+let gameMode='explore', selDef=null, hovPrev=null;
+const raycaster=new THREE.Raycaster(), m2d=new THREE.Vector2();
+
+function ndcFromEvent(e){
+  const r=canvas.getBoundingClientRect();
+  return {nx:((e.clientX-r.left)/r.width)*2-1, ny:-((e.clientY-r.top)/r.height)*2+1};
+}
+
+canvas.addEventListener('click',e=>{
+  if(hasDragged) return;
+  if(gameMode!=='decorate') return;
+  const {nx,ny}=ndcFromEvent(e);
+  raycaster.setFromCamera(new THREE.Vector2(nx,ny),camera);
+  const hits=raycaster.intersectObject(floorPlane);
+  if(!hits.length) return;
+  const pt=hits[0].point;
+  const {gx,gz}=wToG(pt.x,pt.z);
+  if(selDef){ if(!tryPlace(selDef.id,gx,gz)) showHint('Not enough ♥ or space!','#ff4488',1500); }
+  else tryRemove(gx,gz);
+});
+
+canvas.addEventListener('mousemove',e=>{
+  if(gameMode!=='decorate'||!selDef){
+    if(hovPrev){scene.remove(hovPrev);hovPrev=null;} return;
+  }
+  const {nx,ny}=ndcFromEvent(e);
+  raycaster.setFromCamera(new THREE.Vector2(nx,ny),camera);
+  const hits=raycaster.intersectObject(floorPlane);
+  if(!hits.length) return;
+  const pt=hits[0].point;
+  const {gx,gz}=wToG(pt.x,pt.z);
+  if(hovPrev) scene.remove(hovPrev);
+  const d=selDef;
+  hovPrev=new THREE.Mesh(
+    new THREE.BoxGeometry(d.w,0.08,d.d),
+    new THREE.MeshBasicMaterial({color:0xff88ff,transparent:true,opacity:.35}));
+  const ww=gToW(gx,gz);
+  hovPrev.position.set(ww.x+(d.w-1)*.5,.18,ww.z+(d.d-1)*.5);
+  scene.add(hovPrev);
+});
+
+// ================================================================
+// UI
+// ================================================================
+function switchMode(m){
+  gameMode=m;
+  document.getElementById('bEx').className='bb'+(m==='explore'?' on':'');
+  document.getElementById('bDc').className='bb'+(m==='decorate'?' on':'');
+  document.getElementById('dp').style.display=m==='decorate'?'flex':'none';
+  canvas.className=m==='decorate'?'dmode':'';
+  if(m!=='decorate'){selDef=null;if(hovPrev){scene.remove(hovPrev);hovPrev=null;}}
+}
+
+function buildFurnPanel(){
+  const fl=document.getElementById('flist'); fl.innerHTML='';
+  FDEFS.forEach(d=>{
+    const lk=collected<d.cost;
+    const el=document.createElement('div');
+    el.className='fi'+(lk?' lk':'')+(selDef&&selDef.id===d.id?' sel':'');
+    el.innerHTML=`<div class="fic">${d.emoji}</div>
+      <div class="fin">
+        <div class="fnm">${d.name}</div>
+        <div class="fcs ${d.cost===0?'fr':''}">${d.cost===0?'FREE':'♥ '+d.cost}</div>
+      </div>`;
+    if(!lk) el.onclick=()=>{ selDef=(selDef&&selDef.id===d.id)?null:d; buildFurnPanel(); };
+    fl.appendChild(el);
+  });
+}
+
+let pendNotePos=null;
+function openWriteNote(){
+  if(gameMode==='decorate') return;
+  pendNotePos={x:player.x,z:player.z};
+  document.getElementById('nta').value='';
+  document.getElementById('nwOv').classList.add('show');
+}
+
+document.getElementById('bSv').onclick=()=>{
+  const txt=document.getElementById('nta').value.trim();
+  if(!txt||!pendNotePos){document.getElementById('nwOv').classList.remove('show');return;}
+  const nid='n'+Date.now();
+  const note={x:pendNotePos.x,z:pendNotePos.z,text:txt,author:iAmP1?'p1':'p2'};
+  placeNote(nid,note.x,note.z,note.text,note.author);
+  pubNote(nid,note);
+  document.getElementById('nwOv').classList.remove('show');
+};
+document.getElementById('bCn').onclick=()=>document.getElementById('nwOv').classList.remove('show');
+document.getElementById('bCl').onclick=()=>document.getElementById('nrOv').classList.remove('show');
+document.getElementById('bEx').onclick=()=>switchMode('explore');
+document.getElementById('bDc').onclick=()=>switchMode('decorate');
+document.getElementById('bNt').onclick=openWriteNote;
+
+// ================================================================
+// FIREBASE
+// ================================================================
+let db2,_r,_s,_ov;
+let myR,remR,furR,notR,hR;
+let iAmP1=null, gfName='My Love';
+let lastPub=0;
+
+function initFB(){
+  db2=window.__db;_r=window.__ref;_s=window.__set;_ov=window.__onValue;
+  const slot=iAmP1?1:2, other=iAmP1?2:1;
+  myR =_r(db2,`vr3d/p${slot}`); remR=_r(db2,`vr3d/p${other}`);
+  furR=_r(db2,'vr3d/furniture');
+  notR=_r(db2,'vr3d/notes');
+  hR  =_r(db2,'vr3d/hearts');
+
+  _ov(remR,snap=>{
+    const d=snap.val(); if(!d) return;
+    remote.x=d.x; remote.z=d.z; remote.ry=d.ry; remote.online=true;
+    ch2.g.visible=true;
+    ch2.g.position.set(d.x,0,d.z); ch2.g.rotation.y=d.ry;
+    document.getElementById('d1').className='dot on';
+    document.getElementById('d2').className='dot on';
+    document.getElementById('stxt').textContent='Together ♥';
+  });
+  _ov(furR,snap=>{
+    const d=snap.val();
+    if(d){ loadFurniture(JSON.parse(d)); }
+    else { loadFurniture(DEFAULT_FUR); pubFurniture(); }
+  });
+  _ov(notR,snap=>{
+    const d=snap.val()||{};
+    for(const [nid,n] of Object.entries(d)) placeNote(nid,n.x,n.z,n.text,n.author);
+  });
+  _ov(hR,snap=>{
+    const d=snap.val()||{};
+    let c=0;
+    for(let i=0;i<5;i++){
+      if(d[i]&&!heartState[i]){
+        heartState[i]=true;
+        if(heartObjs[i]) heartObjs[i].group.visible=false;
+        heartObjs[i] && (heartObjs[i].collected=true);
+      }
+      if(d[i]) c++;
+    }
+    collected=c; updateHCount(); buildFurnPanel();
+  });
+}
+
+function pubPos(){
+  if(!db2||!myR) return;
+  const now=Date.now(); if(now-lastPub<45) return; lastPub=now;
+  _s(myR,{x:+player.x.toFixed(2),z:+player.z.toFixed(2),ry:+player.ry.toFixed(2)});
+}
+function pubFurniture(){
+  if(!db2) return;
+  _s(furR,JSON.stringify(placed.map(({uid,defId,gx,gz})=>({uid,defId,gx,gz}))));
+}
+function pubNote(nid,n){ if(!db2)return; _s(_r(db2,`vr3d/notes/${nid}`),n); }
+function pubHearts(){
+  if(!db2)return;
+  const d={}; heartState.forEach((v,i)=>{if(v)d[i]=true;}); _s(hR,d);
+}
+
+// ── Heartbeat slot system ─────────────────────────────────────────
+// A slot is only "live" if its timestamp was updated within 8 seconds.
+// This means stale sessions from closed tabs are automatically ignored.
+const SLOT_TTL = 8000;
+let heartbeatTimer = null;
+
+function isSlotLive(slotVal){
+  if(!slotVal) return false;
+  if(typeof slotVal === 'boolean') return slotVal; // legacy
+  return (Date.now() - slotVal.t) < SLOT_TTL;
+}
+
+function startHeartbeat(slotRef){
+  // Write timestamp every 3 seconds so our slot stays "live"
+  heartbeatTimer = setInterval(()=>{
+    window.__set(slotRef, {t: Date.now()});
+  }, 3000);
+}
+
+function resetRoom(){
+  if(!window.__fbReady){ alert('Firebase not ready yet.'); return; }
+  window.__set(window.__ref(window.__db,'vr3d/slots'), null);
+  document.getElementById('stxt').textContent='Room reset! Enter now ♥';
+  setTimeout(()=>document.getElementById('stxt').textContent='–', 2000);
+}
+
+function startGame(){
+  const inp = document.getElementById('tname').value.trim();
+  if(inp) gfName = inp;
+
+  // Wait for Firebase module to finish loading (handles slow connections)
+  if(!window.__fbReady){
+    document.getElementById('stxt').textContent='Connecting to Firebase…';
+    window.addEventListener('fbReady', ()=> startGame(), {once:true});
+    return;
+  }
+
+  const slotsRef = window.__ref(window.__db, 'vr3d/slots');
+  window.__onValue(slotsRef, snap=>{
+    const d = snap.val() || {};
+    if(iAmP1 !== null) return; // already claimed
+
+    const p1Live = isSlotLive(d.p1);
+    const p2Live = isSlotLive(d.p2);
+
+    if(!p1Live){
+      // Claim P1
+      iAmP1 = true;
+      const mySlotRef = window.__ref(window.__db,'vr3d/slots/p1');
+      window.__set(mySlotRef, {t: Date.now()});
+      window.__onDisconnect(mySlotRef).remove();
+      startHeartbeat(mySlotRef);
+      document.getElementById('d1').className='dot on';
+      document.getElementById('stxt').textContent='Waiting for her…';
+    } else if(!p2Live){
+      // Claim P2
+      iAmP1 = false;
+      const mySlotRef = window.__ref(window.__db,'vr3d/slots/p2');
+      window.__set(mySlotRef, {t: Date.now()});
+      window.__onDisconnect(mySlotRef).remove();
+      startHeartbeat(mySlotRef);
+      player.x=4; player.z=2;
+      document.getElementById('d2').className='dot on';
+      document.getElementById('stxt').textContent='Connecting…';
+    } else {
+      document.getElementById('stxt').textContent='Room full! Press 🔄 to reset.';
+      return;
+    }
+
+    initFB(); spawnHearts(); rebuildSolid();
+    buildFurnPanel(); updateHCount();
+    document.getElementById('ttl').style.display='none';
+  }, {onlyOnce: true});
+}
+
+document.getElementById('tgo').onclick=startGame;
+document.getElementById('treset').onclick=resetRoom;
+
+// ================================================================
+// INPUT
+// ================================================================
+window.addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+  if(e.code==='Enter'&&document.getElementById('ttl').style.display!=='none') startGame();
+  if(e.code==='KeyE'&&pendingNote){
+    const [,n]=pendingNote;
+    document.getElementById('rTxt').textContent=n.text;
+    document.getElementById('rAuth').textContent=
+      '— '+(n.author==='p1'?'You (P1)':gfName+' (P2)');
+    document.getElementById('nrOv').classList.add('show');
+  }
+});
+window.addEventListener('keyup',e=>{ keys[e.code]=false; });
+
+// ================================================================
+// GAME LOOP
+// ================================================================
+let frame=0;
+function loop(){
+  frame++; requestAnimationFrame(loop);
+  if(document.getElementById('ttl').style.display==='none'){
+    movePlayer();
+    checkHearts();
+    checkNotes();
+    updateCam();
+    pubPos();
+    // Animate remote player
+    if(remote.online){
+      const moving=Math.abs(remote.x-(remote.px||remote.x))>.001||Math.abs(remote.z-(remote.pz||remote.z))>.001;
+      remote.px=remote.x; remote.pz=remote.z;
+      ch2.g.position.set(remote.x,0,remote.z);
+      ch2.g.rotation.y=remote.ry;
+      animWalk(ch2,moving,Date.now());
+    }
+    // Float hearts
+    heartObjs.forEach((h,i)=>{
+      if(h.collected) return;
+      h.group.position.y=.9+Math.sin(frame*.05+i)*.22;
+      h.group.rotation.y+=.025;
+    });
+    // Float notes
+    Object.values(noteObjs).forEach((n,i)=>{
+      n.group.position.y=.15+Math.sin(frame*.06+i)*.08;
+      n.group.rotation.y+=.012;
+    });
+    // Lamp pulse
+    warmPt.intensity=1.2+Math.sin(frame*.04)*.12;
+  }
+  renderer.render(scene,camera);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+buildRoom();
+rebuildSolid();
+camera.position.set(6,6,9);
+camera.lookAt(0,0,0);
+loop();
+</script>
+</body>
+</html>
